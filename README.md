@@ -2,6 +2,24 @@
 
 Record every API call your **Claude Code v2** session makes to Anthropic — request bodies, system prompts, tool definitions, streaming responses, token usage — into a JSONL log and a self-contained HTML viewer.
 
+## Install
+
+```bash
+npm install -g claude-trace-v2
+```
+
+That's it. Requires Node 18+ and the `claude` CLI from `@anthropic-ai/claude-code` already on your `$PATH`.
+
+## Run
+
+```bash
+claude-trace-v2                              # interactive Claude Code session, fully logged
+claude-trace-v2 --run-with -p "hello"        # one-shot prompt, fully logged
+claude-trace-v2 --generate-html log.jsonl    # re-render an existing log into HTML
+```
+
+Output lands in `./.claude-trace/<basename>.{jsonl,html}` next to wherever you ran the command.
+
 ```
 $ claude-trace-v2
 claude-trace-v2
@@ -106,30 +124,14 @@ Every request/response pair is one JSONL line:
 
 ---
 
-## Install
-
-Requires Node 18+ on the host running the CLI. The child claude process can be any runtime (we just shell out to it).
+## More usage examples
 
 ```bash
-git clone git@github.com:sohamshah/claude-trace-v2.git
-cd claude-trace-v2
-npm install
-npm run build
-npm link    # optional: puts claude-trace-v2 on $PATH
-```
-
-## Usage
-
-```bash
-# Record an interactive session (default)
-claude-trace-v2
-
-# Pass arguments through to claude
+# Pass arguments through to the underlying claude binary
 claude-trace-v2 --log demo --run-with -p "summarize this repo"
 
 # Capture every request, not just /v1/messages (default filters out
-# unrelated traffic). Use this if you want background telemetry calls,
-# token-count probes, etc.
+# unrelated traffic — token-count probes, telemetry, etc.)
 claude-trace-v2 --include-all-requests
 
 # Custom basename for the output files
@@ -138,17 +140,12 @@ claude-trace-v2 --log my-bug-repro
 # Don't pop the HTML in your browser when the session ends
 claude-trace-v2 --no-open
 
-# Re-render an existing JSONL into HTML (e.g., from a coworker's bug report)
-claude-trace-v2 --generate-html .claude-trace/log-2026-05-05.jsonl
-
-# Point at a non-default upstream (e.g., a staging endpoint)
+# Point at a non-default API host (e.g., a staging endpoint)
 claude-trace-v2 --upstream https://api.staging.anthropic.com
 
 # Override claude binary discovery
 claude-trace-v2 --claude /custom/path/to/claude
 ```
-
-Output lands in `./.claude-trace/<basename>.{jsonl,html}`.
 
 ## CLI reference
 
