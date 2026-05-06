@@ -1,0 +1,37 @@
+{
+  "name": "claude-trace-v2",
+  "version": "0.1.0",
+  "description": "Record interactions with Claude Code v2 (native binary) by proxying ANTHROPIC_BASE_URL.",
+  "main": "dist/index.js",
+  "bin": {
+    "claude-trace-v2": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x dist/cli.js",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "test:html": "node dist/cli.js --generate-html test/sample.jsonl test/sample.html"
+  },
+  "files": [
+    "dist/**/*",
+    "frontend/dist/**/*",
+    "frontend/template.html",
+    "README.md"
+  ],
+  "keywords": [
+    "claude",
+    "anthropic",
+    "logging",
+    "api",
+    "proxy",
+    "debugging"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

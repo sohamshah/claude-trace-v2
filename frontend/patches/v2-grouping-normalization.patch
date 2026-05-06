@@ -1,0 +1,75 @@
+diff --git a/apps/claude-trace/src/shared-conversation-processor.ts b/apps/claude-trace/src/shared-conversation-processor.ts
+index 1415a98..237dcbe 100644
+--- a/apps/claude-trace/src/shared-conversation-processor.ts
++++ b/apps/claude-trace/src/shared-conversation-processor.ts
+@@ -499,7 +499,7 @@ export class SharedConversationProcessor {
+         for (const pair of pairs) {
+             const system = pair.request.system;
+             const model = pair.model;
+-            const systemKey = JSON.stringify({ system, model });
++            const systemKey = JSON.stringify({ system: this.normalizeSystemForGrouping(system), model });
+ 
+             if (!pairsBySystem.has(systemKey)) {
+                 pairsBySystem.set(systemKey, []);
+@@ -781,14 +781,12 @@ export class SharedConversationProcessor {
+         if (Array.isArray(message.content)) {
+             normalizedContent = message.content.map((block) => {
+                 if (block.type === "text" && "text" in block) {
+-                    let text = block.text;
+-                    text = text.replace(/Generated \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/g, "Generated [TIMESTAMP]");
+-                    text = text.replace(/The user opened the file [^\s]+ in the IDE\./g, "The user opened file in IDE.");
+-                    text = text.replace(/<system-reminder>.*?<\/system-reminder>/gs, "[SYSTEM-REMINDER]");
+-                    return { type: "text", text: text };
++                    return { type: "text", text: this.normalizeVolatileText(block.text) };
+                 }
+                 return block;
+             });
++        } else if (typeof message.content === "string") {
++            normalizedContent = this.normalizeVolatileText(message.content);
+         } else {
+             normalizedContent = message.content;
+         }
+@@ -799,6 +797,43 @@ export class SharedConversationProcessor {
+         };
+     }
+ 
++    /**
++     * Strip per-call volatile fragments from text (timestamps, IDE cwd, system reminders,
++     * Claude Code v2 billing-header cache hash `cch=...;`).
++     */
++    private normalizeVolatileText(text: string): string {
++        text = text.replace(/Generated \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/g, "Generated [TIMESTAMP]");
++        text = text.replace(/The user opened the file [^\s]+ in the IDE\./g, "The user opened file in IDE.");
++        text = text.replace(/<system-reminder>.*?<\/system-reminder>/gs, "[SYSTEM-REMINDER]");
++        text = text.replace(/cch=[0-9a-f]+;?/g, "cch=[HASH];");
++        return text;
++    }
++
++    /**
++     * Normalize the system field for grouping. Strips cache_control variations and
++     * volatile billing-header text so identical conversations group together even when
++     * the SDK shuffles cache_control TTLs or rotates per-call hashes.
++     */
++    private normalizeSystemForGrouping(system: any): any {
++        if (system == null) return null;
++        if (typeof system === "string") return this.normalizeVolatileText(system);
++        if (Array.isArray(system)) {
++            return system.map((block) => {
++                if (!block || typeof block !== "object") return block;
++                const next: Record<string, any> = {};
++                for (const [k, v] of Object.entries(block)) {
++                    if (k === "cache_control") continue; // varies between calls; not semantic
++                    next[k] = v;
++                }
++                if (next.type === "text" && typeof next.text === "string") {
++                    next.text = this.normalizeVolatileText(next.text);
++                }
++                return next;
++            });
++        }
++        return system;
++    }
++
+     /**
+      * Generate hash string for conversation grouping
+      */
