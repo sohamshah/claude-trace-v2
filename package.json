@@ -1,7 +1,7 @@
 {
   "name": "claude-trace-v2",
   "version": "0.1.0",
-  "description": "Record interactions with Claude Code v2 (native binary) by proxying ANTHROPIC_BASE_URL.",
+  "description": "Record Claude Code v2 traffic (request bodies, system prompts, tools, streamed responses) into a JSONL log and a self-contained HTML viewer, by proxying ANTHROPIC_BASE_URL through a local HTTP server.",
   "main": "dist/index.js",
   "bin": {
     "claude-trace-v2": "dist/cli.js"
@@ -10,25 +10,42 @@
     "build": "tsc && chmod +x dist/cli.js",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
-    "test:html": "node dist/cli.js --generate-html test/sample.jsonl test/sample.html"
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "files": [
     "dist/**/*",
     "frontend/dist/**/*",
     "frontend/template.html",
-    "README.md"
+    "frontend/patches/**/*",
+    "README.md",
+    "LICENSE"
   ],
   "keywords": [
     "claude",
+    "claude-code",
     "anthropic",
     "logging",
+    "trace",
     "api",
     "proxy",
-    "debugging"
+    "debugging",
+    "observability"
   ],
   "license": "MIT",
+  "author": "Soham Shah",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sohamshah/claude-trace-v2.git"
+  },
+  "homepage": "https://github.com/sohamshah/claude-trace-v2#readme",
+  "bugs": {
+    "url": "https://github.com/sohamshah/claude-trace-v2/issues"
+  },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
